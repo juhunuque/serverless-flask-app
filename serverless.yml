@@ -21,7 +21,6 @@ custom:
       - test
     start:
       migrate: true
-      noStart: true
   localstack:
     debug: true
     stages:

@@ -1,0 +1,6 @@
+FROM mikesir87/aws-cli
+WORKDIR /app
+
+COPY ./db .
+
+CMD ./init.sh
