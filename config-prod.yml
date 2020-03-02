@@ -1,0 +1,5 @@
+# The use of this file should be avoided in a production environment.
+# A good practice is not storing sensible data into the repository.
+# This file should serve only as a template.
+AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+DYNAMO_CLIENTS_TABLE: bank_users_${self:custom.stage}
