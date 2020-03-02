@@ -1,0 +1,75 @@
+service: flask-serverless
+
+plugins:
+  - serverless-python-requirements
+  - serverless-wsgi
+  - serverless-dynamodb-local
+  - serverless-localstack
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  wsgi:
+    app: src/api/handler.app
+    packRequirements: false
+  pythonRequirements:
+    dockerImage: lambci/lambda:build-python3.7
+    zip: true
+    dockerizePip: non-linux
+  dynamodb:
+    stages:
+      - dev
+      - test
+    start:
+      migrate: true
+      noStart: true
+  localstack:
+    debug: true
+    stages:
+      - local
+    host: http://localhost
+    lambda:
+      mountCode: True
+    docker:
+      sudo: False
+
+package:
+  exclude:
+    - node_modules/**
+    - venv/**
+
+provider:
+  name: aws
+  runtime: python3.7
+  stage: dev
+  region: us-east-1
+  environment: ${file(config-${self:custom.stage}.yml)}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "*"
+      Resource: "*"
+
+functions:
+  app:
+    handler: wsgi.handler
+    events:
+      - http: ANY /
+      - http: 'ANY {proxy+}'
+
+
+resources:
+  Resources:
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMO_CLIENTS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
